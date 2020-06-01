@@ -27,7 +27,7 @@ type Node struct {
 // Attr implements fs.Node interface for *Dir which is required
 // Attr fills attr with the standard metadata for the node.
 func (n *Node) Attr(ctx context.Context, a *fuse.Attr) (err error) {
-	log.Printf("Node.Attr()")
+	log.Printf("Node.Attr() with caller: %s", n.realPath)
 	fi, err := os.Stat(n.realPath)
 	if err != nil {
 		return identifyError(err)
@@ -44,7 +44,7 @@ var _ fs.NodeSetattrer = (*Node)(nil)
 // Setattr implements fs.NodeSetattrer interface for *Node
 // Setattr sets the standard metadata for the receiver req.Valid is a bitmask of what fields are actually being set
 func (n *Node) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse.SetattrResponse) (err error) {
-	log.Printf("Node.Setattr()")
+	log.Printf("Node.Setattr() with caller: %s", n.realPath)
 	// Check if size can be changed or not if can then truncate
 	if req.Valid.Size() {
 		if err = syscall.Truncate(n.realPath, int64(req.Size)); err != nil {
@@ -117,7 +117,7 @@ var _ fs.NodeRemover = (*Node)(nil)
 // Remove the entry with the given name from the reciever(directory)
 // Remove can be for both file or directory(Node)
 func (n *Node) Remove(ctx context.Context, req *fuse.RemoveRequest) (err error) {
-	log.Printf("Node.Remove()")
+	log.Printf("Node.Remove() with caller: %s", n.realPath)
 	name := filepath.Join(n.realPath, req.Name)
 	defer func() {
 		if err == nil {
@@ -134,7 +134,7 @@ var _ fs.NodeAccesser = (*Node)(nil)
 // Access implements fs.NodeAccesser interface for *Node
 // Access checks the Mode of the receiver whether the calling context has permission to perform operation
 func (n *Node) Access(ctx context.Context, a *fuse.AccessRequest) (err error) {
-	log.Printf("Node.Access()")
+	log.Printf("Node.Access() with caller: %s", n.realPath)
 	fi, err := os.Stat(n.realPath)
 	if err != nil {
 		return identifyError(err)
@@ -150,7 +150,7 @@ var _ fs.NodeStringLookuper = (*Node)(nil)
 // Lookup implements fs.NodeStringLookuper interface for *Node
 func (n *Node) Lookup(ctx context.Context, name string) (ret fs.Node, err error) {
 
-	log.Printf("Node.Lookup() with param: name=%s", name)
+	log.Printf("Node.Lookup() with caller: %s with param: name=%s", n.realPath, name)
 	// Works only on directory return error if not a directory
 	if !n.isDir {
 		return nil, fuse.ENOTSUP
@@ -180,7 +180,7 @@ var _ fs.NodeMkdirer = (*Node)(nil)
 // Mkdir implements fs.NodeMkdirer interface for *Node
 // Mkdir as name says create a Node(directory) using os.Mkdir
 func (n *Node) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (created fs.Node, err error) {
-	log.Printf("Node.Mkdir()")
+	log.Printf("Node.Mkdir() with caller: %s with param: %s", n.realPath, req.Name)
 	name := filepath.Join(n.realPath, req.Name)
 	if err = os.Mkdir(name, req.Mode); err != nil {
 		return nil, identifyError(err)
@@ -194,7 +194,7 @@ var _ fs.NodeOpener = (*Node)(nil)
 
 // Open implements fs.NodeOpener interface for *Node
 func (n *Node) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (h fs.Handle, err error) {
-	log.Printf("Node.Open()")
+	log.Printf("Node.Open() with caller: %s", n.realPath)
 	// Checking flags and permissions
 	flags, perm := fuseOpenFlagsToOSFlagsAndPerms(req.Flags)
 	// opener contains file descriptor
@@ -219,7 +219,7 @@ var _ fs.NodeCreater = (*Node)(nil)
 
 // Create implements fs.NodeCreater interface for *Node
 func (n *Node) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.CreateResponse) (fsn fs.Node, fsh fs.Handle, err error) {
-	log.Printf("Node.Create()")
+	log.Printf("Node.Create() with caller: %s with param: %s", n.realPath, req.Name)
 	flags, _ := fuseOpenFlagsToOSFlagsAndPerms(req.Flags)
 	name := filepath.Join(n.realPath, req.Name)
 	opener := func() (f *os.File, err error) {
@@ -250,7 +250,7 @@ var _ fs.NodeFsyncer = (*Node)(nil)
 
 // Fsync implements fs.NodeFsyncer interface for *Node
 func (n *Node) Fsync(ctx context.Context, req *fuse.FsyncRequest) (err error) {
-	log.Printf("Node.Fsync()")
+	log.Printf("Node.Fsync() with caller: %s ", n.realPath)
 	n.lock.RLock()
 	defer n.lock.RUnlock()
 	for h := range n.flushers {
@@ -263,7 +263,7 @@ var _ fs.NodeRenamer = (*Node)(nil)
 
 // Rename implements fs.NodeRenamer interface for *Node
 func (n *Node) Rename(ctx context.Context, req *fuse.RenameRequest, newDir fs.Node) (err error) {
-	log.Printf("Node.Rename()")
+	log.Printf("Node.Rename() with caller: %s with param: np=%s op=%s", n.realPath, req.NewName, req.OldName)
 	np := filepath.Join(newDir.(*Node).realPath, req.NewName)
 	op := filepath.Join(n.realPath, req.OldName)
 	defer func() {
@@ -286,7 +286,7 @@ var _ fs.NodeGetxattrer = (*Node)(nil)
 
 // Getxattr implements fs.Getxattrer interface for *Node
 func (n *Node) Getxattr(ctx context.Context, req *fuse.GetxattrRequest, resp *fuse.GetxattrResponse) (err error) {
-	log.Printf("Node.Getxattr()")
+	log.Printf("Node.Getxattr() with caller: %s with param: %s", n.realPath, req.Name)
 	n.fs.xlock.RLock()
 	defer n.fs.xlock.RUnlock()
 	if x := n.fs.xattrs[n.realPath]; x != nil {
@@ -304,7 +304,7 @@ var _ fs.NodeListxattrer = (*Node)(nil)
 
 // Listxattr implements fs.Listxattrer interface for *Node
 func (n *Node) Listxattr(ctx context.Context, req *fuse.ListxattrRequest, resp *fuse.ListxattrResponse) (err error) {
-	log.Printf("Node.Listxattr()")
+	log.Printf("Node.Listxattr() with caller: %s", n.realPath)
 	n.fs.xlock.RLock()
 	defer n.fs.xlock.RUnlock()
 	if x := n.fs.xattrs[n.realPath]; x != nil {
@@ -335,7 +335,7 @@ var _ fs.NodeSetxattrer = (*Node)(nil)
 
 // Setxattr implements fs.Setxattrer interface for *Node
 func (n *Node) Setxattr(ctx context.Context, req *fuse.SetxattrRequest) (err error) {
-	log.Printf("Node.Setxattr()")
+	log.Printf("Node.Setxattr() with caller: %s", n.realPath)
 	n.fs.xlock.Lock()
 	defer n.fs.xlock.Unlock()
 	if n.fs.xattrs[n.realPath] == nil {
@@ -352,7 +352,7 @@ var _ fs.NodeRemovexattrer = (*Node)(nil)
 
 // Removexattr implements fs.Removexattrer interface for *Node
 func (n *Node) Removexattr(ctx context.Context, req *fuse.RemovexattrRequest) (err error) {
-	log.Printf("Node.Removexattr()")
+	log.Printf("Node.Removexattr() with caller: %s with param: %s", n.realPath, req.Name)
 	n.fs.xlock.Lock()
 	defer n.fs.xlock.Unlock()
 
@@ -372,7 +372,7 @@ func (n *Node) Removexattr(ctx context.Context, req *fuse.RemovexattrRequest) (e
 // Forget implements fs.NodeForgetter interface for *Node
 func (n *Node) Forget() {
 	var f = n.fs
-	log.Printf("FS.forgetNode() with param: %s", n.realPath)
+	log.Printf("FS.forgetNode() with caller: %s", n.realPath)
 	f.nlock.Lock()
 	defer f.nlock.Unlock()
 	nodes, ok := f.nodes[n.realPath]
@@ -400,7 +400,7 @@ func (n *Node) Forget() {
 }
 
 func (n *Node) rememberHandle(h *Handle) {
-	log.Printf("Node.rememberHandle() %v", h.f.Name())
+	log.Printf("Node.rememberHandle() with caller: %s with param: %s", n.realPath, h.f.Name())
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if n.flushers == nil {
@@ -410,7 +410,7 @@ func (n *Node) rememberHandle(h *Handle) {
 }
 
 func (n *Node) forgetHandle(h *Handle) {
-	log.Printf("Node.forgetHandle() %v", h.f.Name())
+	log.Printf("Node.forgetHandle() with caller: %s with param: %s", n.realPath, h.f.Name())
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if n.flushers == nil {

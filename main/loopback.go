@@ -53,7 +53,7 @@ type FS struct {
 
 // Root implements fs.FS interface required for File System to obtain Node for File System
 func (f *FS) Root() (n fs.Node, err error) {
-	log.Printf("FS.Root()")
+	log.Printf("FS.Root() with caller: %s", f.rootPath)
 	nn := &Node{
 		realPath: f.rootPath,
 		isDir:    true,
@@ -65,7 +65,7 @@ func (f *FS) Root() (n fs.Node, err error) {
 
 // Statfs implements fs.FSStatfser interface for *FS to obtain file system metadata
 func (f *FS) Statfs(ctx context.Context, req *fuse.StatfsRequest, resp *fuse.StatfsResponse) (err error) {
-	log.Printf("FS.Statfs")
+	log.Printf("FS.Statfs with caller: %s", f.rootPath)
 	// kernel DS to keep metadata
 	var stat syscall.Statfs_t
 
@@ -89,14 +89,14 @@ func (f *FS) Statfs(ctx context.Context, req *fuse.StatfsRequest, resp *fuse.Sta
 
 // Destroy implements fs.FSDestroyer interface for *FS to shutdown file system
 func (f *FS) Destroy() {
-	log.Print("FS.Destroy")
+	log.Printf("FS.Destroy() with caller: %s", f.rootPath)
 }
 
 // FS.GenerateInode of FSInodeGenerator interface is not implmented default implementation of bazil/fuse to generate dynamic inode numbers will be used
 
 // Create a new node n within the directory specified by rp
 func (f *FS) newNode(n *Node) {
-	log.Printf("FS.newNode() with param: %s", n.realPath)
+	log.Printf("FS.newNode() with caller: %s with param: %s", f.rootPath, n.realPath)
 	rp := n.realPath
 	f.nlock.Lock()
 	defer f.nlock.Unlock()
