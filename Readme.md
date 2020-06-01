@@ -9,4 +9,4 @@ go get bazil.org/fuse
 
 Clone this repository and build the files in main package
 Run as:
-/loopback <loopback dir path> <mountpath>
+/loopback loopbackpath mountpath
