@@ -7,6 +7,6 @@ Based on file system library <a href="https://github.com/bazil/fuse">Bazil-fuse<
 Install bazil/fuse using:
 go get bazil.org/fuse
 
-Clone this repository and build the files in main package
+Clone this repository and build the files in main package using go build
 Run as:
 /loopback loopbackpath mountpath
