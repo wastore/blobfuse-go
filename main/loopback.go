@@ -8,13 +8,15 @@ import (
 	"sync"
 	"syscall"
 
+	"../connection"
+
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 )
 
 // Two command line argument 1st: Loopback Directory 2nd: mountpoint
 func main() {
-	log.Printf("Starting Loopback FS")
+	log.Printf("Starting Blobfuse-Go")
 	flag.Usage = usage
 	flag.Parse()
 
@@ -25,6 +27,17 @@ func main() {
 	}
 	mountpoint := flag.Arg(1)
 	loopbackPath := flag.Arg(0)
+	var accountName = "anmodgen2hns"
+	var accountKey = "eVRkbYV6DJVGl32T4KHtwO6siw9PluciqwBpw0Z7bm4p5c7RVgwE4FsaXHQMVMySq8QQCX+9jPQ2OODPW3Ej3A=="
+	var containerName = "test"
+
+	ret := connection.ValidateAccount(accountName, accountKey, containerName)
+	if ret != 0 {
+		log.Printf("Unable to Start blobfuse. Failed to coonect to storage account")
+		os.Exit(ret)
+	}
+
+	log.Printf("Storage Account Validated Successfully Starting File System mount")
 
 	// Options can be changed accordingly: Here non empty directory can be mounted and all users are allowed to mount
 	c, err := fuse.Mount(mountpoint, fuse.FSName("loopback"), fuse.Subtype("cache"))
