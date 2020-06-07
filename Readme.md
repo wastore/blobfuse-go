@@ -7,6 +7,11 @@ Based on file system library <a href="https://github.com/bazil/fuse">Bazil-fuse<
 Install bazil/fuse using:
 go get bazil.org/fuse
 
-Clone this repository and build the files in main package using go build
-Run as:
-/loopback loopbackpath mountpath
+File system for mounting azure storage account container as a virtual file system. 
+
+Build Instruction:
+Clone the repo and move inside main directory
+go build filesystem.go
+
+Run:
+./filesystem [mount-dir path]

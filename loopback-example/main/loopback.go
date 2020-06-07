@@ -8,8 +8,6 @@ import (
 	"sync"
 	"syscall"
 
-	"../../connection"
-
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 )
@@ -27,15 +25,6 @@ func main() {
 	}
 	mountpoint := flag.Arg(1)
 	loopbackPath := flag.Arg(0)
-	var accountName = "anmodgen2hns"
-	var accountKey = "eVRkbYV6DJVGl32T4KHtwO6siw9PluciqwBpw0Z7bm4p5c7RVgwE4FsaXHQMVMySq8QQCX+9jPQ2OODPW3Ej3A=="
-	var containerName = "test"
-
-	ret := connection.ValidateAccount(accountName, accountKey, containerName)
-	if ret != 0 {
-		log.Printf("Unable to Start blobfuse. Failed to coonect to storage account")
-		os.Exit(ret)
-	}
 
 	log.Printf("Storage Account Validated Successfully Starting File System mount")
 
