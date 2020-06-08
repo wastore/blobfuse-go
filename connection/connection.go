@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"../credentials"
 	"github.com/Azure/azure-storage-blob-go/azblob"
 )
 
@@ -18,21 +19,21 @@ var (
 )
 
 // ValidateAccount verifies storage account credentials and returns a connection
-func ValidateAccount(accountName string, accountKey string, container string) (errno int) {
+func ValidateAccount() (errno int) {
 
-	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
+	credential, err := azblob.NewSharedKeyCredential(credentials.AccountName, credentials.AccountKey)
 	if err != nil {
 		log.Printf("%v", err)
 		log.Printf("Error in NewShared KEy")
 		return 1
 	}
 	p := azblob.NewPipeline(credential, azblob.PipelineOptions{})
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", accountName))
+	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", credentials.AccountName))
 	serviceURL = azblob.NewServiceURL(*u, p)
 
 	// Try to list the blobs to verify the connection and account
 	ctx = context.Background()
-	containerURL = serviceURL.NewContainerURL(container)
+	containerURL = serviceURL.NewContainerURL(credentials.ContainerName)
 	marker := (azblob.Marker{})
 	_, err = containerURL.ListBlobsHierarchySegment(ctx, marker, "/", azblob.ListBlobsSegmentOptions{})
 	if err != nil {
@@ -87,4 +88,26 @@ func ReadBlobContents(blobName string) []byte {
 	fmt.Printf("Downloaded Data: %s", downloadedData)
 	reader.Close()
 	return downloadedData.Bytes()
+}
+
+// UploadBlobContents returns status
+func UploadBlobContents(blobName string, data string, isDir bool) int {
+	log.Printf("UploadBlobContent: %s", blobName)
+	blobURL := containerURL.NewBlockBlobURL(blobName)
+	reader := strings.NewReader(data)
+	header := azblob.BlobHTTPHeaders{
+		ContentType: "application/octet-stream",
+	}
+	metadata := azblob.Metadata{}
+	if isDir {
+		metadata = azblob.Metadata{
+			"hdi_isFolder": "true",
+		}
+	}
+	_, err := blobURL.Upload(ctx, reader, header, metadata, azblob.BlobAccessConditions{})
+	if err != nil {
+		log.Fatal(err)
+		return 1
+	}
+	return 0
 }

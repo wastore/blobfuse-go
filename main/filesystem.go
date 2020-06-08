@@ -17,15 +17,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-const (
-	// AccountName holds dtorage account name
-	AccountName = "anmodblobwthns"
-	// AccountKey hold shared access key for account
-	AccountKey = "NzDZ6OKACy3/yYR7titw1fU05RxYVcZKhYwpVcaaMJg1Upgl4zYruXEGGztvBYVBt9/+uCgOE2vh41Cpel2CUw=="
-	// ContainerName holds name of storage container in the acoount
-	ContainerName = "test"
-)
-
 func usage() {
 	log.Printf("Usage of %s:\n", os.Args[0])
 	log.Printf("  %s MOUNTPOINT\n", os.Args[0])
@@ -42,7 +33,7 @@ func main() {
 	}
 
 	log.Printf("Validating Account Credentials")
-	ret := connection.ValidateAccount(AccountName, AccountKey, ContainerName)
+	ret := connection.ValidateAccount()
 	if ret != 0 {
 		log.Printf("Error in Validating Credentials")
 		os.Exit(1)
@@ -264,35 +255,40 @@ func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error
 	log.Printf("Mkdir")
 	d.Lock()
 	defer d.Unlock()
-
 	if _, exists := d.nodes[req.Name]; exists {
 		return nil, fuse.EEXIST
 	}
-
-	n := d.fs.newDir(d.path+req.Name+"/", req.Mode, 0, time.Now())
+	n := d.fs.newDir(d.path+req.Name+"/", 0o775, 0, time.Now())
 	d.nodes[req.Name] = n
 	atomic.AddUint64(&d.fs.nodeCount, 1)
-
+	// Upload an empty blob with this name
+	ret := connection.UploadBlobContents(d.path+req.Name, "", true)
+	if ret != 0 {
+		log.Printf("Error in Creating Empty Blob")
+		return nil, fuse.ENODATA
+	}
 	return n, nil
 }
 
 // Create implements
 func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.CreateResponse) (fs.Node, fs.Handle, error) {
-	log.Printf("Create")
+	log.Printf("Create file %s in dir: %s", req.Name, d.path)
 	d.Lock()
 	defer d.Unlock()
-
 	if _, exists := d.nodes[req.Name]; exists {
 		return nil, nil, fuse.EEXIST
 	}
-
-	n := d.fs.newFile(req.Name, req.Mode, 0, time.Now())
+	n := d.fs.newFile(d.path+req.Name, 0o666, 0, time.Now())
 	n.fs = d.fs
 	d.nodes[req.Name] = n
 	atomic.AddUint64(&d.fs.nodeCount, 1)
-
 	resp.Attr = n.attr
-
+	// Upload an empty blob with this name
+	ret := connection.UploadBlobContents(n.path, "", false)
+	if ret != 0 {
+		log.Printf("Error in Creating Empty Blob")
+		return nil, nil, fuse.ENODATA
+	}
 	return n, n, nil
 }
 
@@ -359,7 +355,6 @@ func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenR
 	f.attr.Mtime = time.Now()
 	f.attr.Atime = time.Now()
 	f.attr.Crtime = time.Now()
-	f.attr.Ctime = time.Now()
 	return f, nil
 }
 
@@ -384,6 +379,11 @@ func (f *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.Wri
 	copy(f.data[req.Offset:end], req.Data)
 	resp.Size = l
 	f.Unlock()
+	// Upload data to Container
+	ret := connection.UploadBlobContents(f.path, string(f.data), false)
+	if ret != 0 {
+		return fuse.ENODATA
+	}
 	return nil
 }
 
