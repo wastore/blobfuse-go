@@ -1,7 +1,6 @@
 package connection
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -75,19 +74,18 @@ func GetBlobItems(prefix string) (blobItems []azblob.BlobItem) {
 }
 
 // ReadBlobContents returns the byte array of the content of blob
-func ReadBlobContents(blobName string) []byte {
+func ReadBlobContents(blobName string, blobsize uint64) []byte {
 	log.Printf("RedBlobContent: %s", blobName)
-	blobURL := containerURL.NewBlockBlobURL(blobName)
-	get, err := blobURL.Download(ctx, 0, 0, azblob.BlobAccessConditions{}, false)
+	blobURL := containerURL.NewBlobURL(blobName)
+	b := make([]byte, blobsize)
+	o := azblob.DownloadFromBlobOptions{
+		Parallelism: 5,
+	}
+	err := azblob.DownloadBlobToBuffer(ctx, blobURL, 0, 0, b, o)
 	if err != nil {
 		log.Fatal(err)
 	}
-	downloadedData := &bytes.Buffer{}
-	reader := get.Body(azblob.RetryReaderOptions{})
-	downloadedData.ReadFrom(reader)
-	fmt.Printf("Downloaded Data: %s", downloadedData)
-	reader.Close()
-	return downloadedData.Bytes()
+	return b
 }
 
 // UploadBlobContents returns status

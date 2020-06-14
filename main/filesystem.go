@@ -348,8 +348,8 @@ func (d *Dir) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 // Open implements
 func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
 	log.Printf("Open")
-	ret := connection.ReadBlobContents(f.path)
-	log.Printf("Got from ReadBLOB: %s", ret)
+	ret := connection.ReadBlobContents(f.path, f.attr.Size)
+	// log.Printf("Got from ReadBLOB: %s", ret)
 	f.attr.Size = uint64(len(ret))
 	f.data = ret
 	f.attr.Mtime = time.Now()
