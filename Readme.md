@@ -1,6 +1,7 @@
 # blobfuse-go
 
 This repo houses code for go implementation of blobfuse
+Refer to the main package for the blobfuse-go code. For a filesystem example using bazil/fuse refer to loopback-example package
 
 Based on file system library <a href="https://github.com/bazil/fuse">Bazil-fuse</a>
 
