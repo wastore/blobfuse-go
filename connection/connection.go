@@ -45,12 +45,12 @@ func ValidateAccount() (errno int) {
 
 // GetBlobItems return list of blobs in the storage account
 func GetBlobItems(prefix string) (blobItems []azblob.BlobItem) {
+	log.Printf("Get Blob Items: %s", prefix)
 	for marker := (azblob.Marker{}); marker.NotDone(); {
 		// Get a result segment starting with the blob indicated by the current Marker.
 		options := azblob.ListBlobsSegmentOptions{}
 		options.Details.Metadata = true
 		if prefix != "" {
-			log.Printf("prefix: %s", prefix)
 			options.Prefix = prefix
 		}
 		listBlob, err := containerURL.ListBlobsHierarchySegment(ctx, marker, "/", options)
@@ -66,7 +66,7 @@ func GetBlobItems(prefix string) (blobItems []azblob.BlobItem) {
 		for _, blobInfo := range listBlob.Segment.BlobItems {
 			namearray := strings.Split(blobInfo.Name, "/")
 			blobInfo.Name = namearray[len(namearray)-1]
-			log.Printf(blobInfo.Name)
+			// log.Printf(blobInfo.Name)
 			blobItems = append(blobItems, blobInfo)
 		}
 	}
@@ -79,6 +79,7 @@ func ReadBlobContents(blobName string, blobsize uint64) []byte {
 	blobURL := containerURL.NewBlobURL(blobName)
 	b := make([]byte, blobsize)
 	o := azblob.DownloadFromBlobOptions{
+		BlockSize:   int64(8 * 1024 * 1024), // 8MB
 		Parallelism: 5,
 	}
 	err := azblob.DownloadBlobToBuffer(ctx, blobURL, 0, 0, b, o)
@@ -89,22 +90,21 @@ func ReadBlobContents(blobName string, blobsize uint64) []byte {
 }
 
 // UploadBlobContents returns status
-func UploadBlobContents(blobName string, data string, isDir bool) int {
+func UploadBlobContents(blobName string, data []byte, isDir bool) int {
 	log.Printf("UploadBlobContent: %s", blobName)
 	blobURL := containerURL.NewBlockBlobURL(blobName)
-	reader := strings.NewReader(data)
-	header := azblob.BlobHTTPHeaders{
-		ContentType: "application/octet-stream",
-	}
 	metadata := azblob.Metadata{}
 	if isDir {
 		metadata = azblob.Metadata{
 			"hdi_isFolder": "true",
 		}
 	}
-	_, err := blobURL.Upload(ctx, reader, header, metadata, azblob.BlobAccessConditions{})
+	o := azblob.UploadToBlockBlobOptions{
+		Metadata:    metadata,
+		Parallelism: 5,
+	}
+	_, err := azblob.UploadBufferToBlockBlob(ctx, data, blobURL, o)
 	if err != nil {
-		log.Fatal(err)
 		return 1
 	}
 	return 0
