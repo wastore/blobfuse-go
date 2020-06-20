@@ -9,12 +9,23 @@ import (
 	"sync/atomic"
 	"time"
 
-	"../connection"
-	"../credentials"
-
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"golang.org/x/net/context"
+)
+
+var (
+	// MountPoint is the Path of Directory where file system will be mounted
+	MountPoint string
+
+	// AccountName is the name of Storage Account to Connect with
+	AccountName string
+
+	// AccountKey is the Shared Access Key of Storage Account
+	AccountKey string
+
+	// ContainerName is the name of container to be mounted
+	ContainerName string
 )
 
 func usage() {
@@ -24,29 +35,33 @@ func usage() {
 }
 
 func main() {
+	mountpoint := flag.String("mountPath", "", "Path of folder to act as a file system")
+	accountname := flag.String("accountName", "", "Name of Storage Account to Mount")
+	accountkey := flag.String("accountKey", "", "Shared Access Key for the storage account")
+	containername := flag.String("containerName", "", "Name of stroge container to mount")
+
 	flag.Usage = usage
 	flag.Parse()
 
-	if flag.NArg() != 1 {
-		usage()
-		os.Exit(2)
-	}
+	MountPoint = *mountpoint
+	AccountName = *accountname
+	AccountKey = *accountkey
+	ContainerName = *containername
 
 	log.Printf("Validating Account Credentials")
-	ret := connection.ValidateAccount()
+	ret := ValidateAccount()
 	if ret != 0 {
 		log.Printf("Error in Validating Credentials")
 		os.Exit(1)
 	}
 	log.Printf("Account Validation Successful, Mounting Directory as FS")
 
-	mountpoint := flag.Arg(0)
 	c, err := fuse.Mount(
-		mountpoint,
+		MountPoint,
 		fuse.FSName("blobfuse"),
 		fuse.Subtype("blobfuse-go"),
 		fuse.LocalVolume(),
-		fuse.VolumeName(credentials.AccountName),
+		fuse.VolumeName(AccountName),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -109,7 +124,7 @@ func NewFS() *FS {
 
 // NewDir is used to create a new fsNode which will act as directory
 func (m *FS) NewDir(path string, mode os.FileMode, size uint64, mtime time.Time) *Dir {
-	log.Printf("newDir with path: %s", path)
+	// log.Printf("NewDir with path: %s", path)
 	n := time.Now()
 	return &Dir{
 		path: path,
@@ -129,7 +144,7 @@ func (m *FS) NewDir(path string, mode os.FileMode, size uint64, mtime time.Time)
 
 // NewFile is used to create a new fsNode which will act as directory
 func (m *FS) NewFile(path string, mode os.FileMode, size uint64, mtime time.Time) *File {
-	log.Printf("NewFile with path: %s", path)
+	// log.Printf("NewFile with path: %s", path)
 	n := time.Now()
 	return &File{
 		path: path,

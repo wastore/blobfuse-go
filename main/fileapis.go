@@ -6,7 +6,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"../connection"
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"golang.org/x/net/context"
@@ -33,8 +32,8 @@ func (f *File) Attr(ctx context.Context, o *fuse.Attr) error {
 
 // Open implements NodeOpener
 func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
-	log.Printf("Open with caller: %s", f.path)
-	ret := connection.ReadBlobContents(f.path, f.attr.Size)
+	// log.Printf("Open with caller: %s", f.path)
+	ret := ReadBlobContents(f.path, f.attr.Size)
 	f.attr.Size = uint64(len(ret))
 	f.data = ret
 	f.attr.Mtime = time.Now()
@@ -46,13 +45,13 @@ func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenR
 
 // ReadAll implements HandleReadAller interface
 func (f *File) ReadAll(ctx context.Context) ([]byte, error) {
-	log.Printf("ReadAll with caller: %s", f.path)
+	// log.Printf("ReadAll with caller: %s", f.path)
 	return f.data, nil
 }
 
 // Write implements HandleWriter interface
 func (f *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
-	log.Printf("Write with caller: %s", f.path)
+	// log.Printf("Write with caller: %s", f.path)
 	f.Lock()
 	defer f.Unlock()
 	l := len(req.Data)
@@ -71,9 +70,9 @@ func (f *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.Wri
 
 // Flush implements HandleFlusher interface
 func (f *File) Flush(ctx context.Context, req *fuse.FlushRequest) error {
-	log.Printf("Flush with caller: %s", f.path)
+	// log.Printf("Flush with caller: %s", f.path)
 	if f.isMod {
-		ret := connection.UploadBlobContents(f.path, f.data, false)
+		ret := UploadBlobContents(f.path, f.data, false)
 		if ret != 0 {
 			return fuse.ENODATA
 		}

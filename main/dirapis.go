@@ -1,12 +1,10 @@
 package main
 
 import (
-	"log"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"../connection"
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"golang.org/x/net/context"
@@ -24,7 +22,7 @@ type Dir struct {
 
 // Attr implements Node interface for directories
 func (d *Dir) Attr(ctx context.Context, o *fuse.Attr) error {
-	log.Printf("Dir.Attr with caller: %s", d.path)
+	// slog.Printf("Dir.Attr with caller: %s", d.path)
 	d.RLock()
 	*o = d.attr
 	d.RUnlock()
@@ -33,7 +31,7 @@ func (d *Dir) Attr(ctx context.Context, o *fuse.Attr) error {
 
 // Lookup implements NodeStringLookuper interface of Node
 func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
-	log.Printf("Lookup with caller: %s", d.path)
+	// log.Printf("Lookup with caller: %s", d.path)
 	d.RLock()
 	n, exist := d.nodes[name]
 	d.RUnlock()
@@ -46,18 +44,18 @@ func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 
 // ReadDirAll implements
 func (d *Dir) ReadDirAll(ctx context.Context) (dirs []fuse.Dirent, err error) {
-	log.Printf("ReadDirAll with caller: %s", d.path)
-	blobItems := connection.GetBlobItems(d.path)
+	// log.Printf("ReadDirAll with caller: %s", d.path)
+	blobItems := GetBlobItems(d.path)
 	for _, blob := range blobItems {
 		if len(blob.Metadata) == 1 {
 			// Directory
 			dir := d.fs.NewDir(d.path+blob.Name+"/", 0o660, uint64(*blob.Properties.ContentLength), blob.Properties.LastModified)
-			log.Printf("Updating in : %s", d.path)
+			// log.Printf("Updating in : %s", d.path)
 			d.nodes[blob.Name] = dir
 		}
 		if len(blob.Metadata) == 0 {
 			file := d.fs.NewFile(d.path+blob.Name, 0o770, uint64(*blob.Properties.ContentLength), blob.Properties.LastModified)
-			log.Printf("Updating in : %s", d.path)
+			// log.Printf("Updating in : %s", d.path)
 			d.nodes[blob.Name] = file
 		}
 	}
@@ -80,7 +78,7 @@ func (d *Dir) ReadDirAll(ctx context.Context) (dirs []fuse.Dirent, err error) {
 
 // Mkdir implements NodeMkdirer interface for Node
 func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error) {
-	log.Printf("Mkdir with caller: %s and param: %s", d.path, req.Name)
+	// log.Printf("Mkdir with caller: %s and param: %s", d.path, req.Name)
 	d.Lock()
 	defer d.Unlock()
 	if _, exists := d.nodes[req.Name]; exists {
@@ -90,7 +88,7 @@ func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error
 	d.nodes[req.Name] = n
 	atomic.AddUint64(&d.fs.nodeCount, 1)
 	// Upload an empty blob with this name
-	ret := connection.UploadBlobContents(d.path+req.Name, []byte(""), true)
+	ret := UploadBlobContents(d.path+req.Name, []byte(""), true)
 	if ret != 0 {
 		// log.Printf("Error in Creating Empty Blob")
 		return nil, fuse.ENODATA
@@ -100,7 +98,7 @@ func (d *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error
 
 // Create implements NodeCreater interface
 func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.CreateResponse) (fs.Node, fs.Handle, error) {
-	log.Printf("Create with caller: %s and param: %s", d.path, req.Name)
+	// log.Printf("Create with caller: %s and param: %s", d.path, req.Name)
 	d.Lock()
 	defer d.Unlock()
 	if _, exists := d.nodes[req.Name]; exists {
@@ -112,7 +110,7 @@ func (d *Dir) Create(ctx context.Context, req *fuse.CreateRequest, resp *fuse.Cr
 	atomic.AddUint64(&d.fs.nodeCount, 1)
 	resp.Attr = n.attr
 	// Upload an empty blob with this name
-	ret := connection.UploadBlobContents(n.path, []byte(""), false)
+	ret := UploadBlobContents(n.path, []byte(""), false)
 	if ret != 0 {
 		// log.Printf("Error in Creating Empty Blob")
 		return nil, nil, fuse.ENODATA

@@ -1,4 +1,4 @@
-package connection
+package main
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 
-	"../credentials"
 	"github.com/Azure/azure-storage-blob-go/azblob"
 )
 
@@ -20,19 +19,19 @@ var (
 // ValidateAccount verifies storage account credentials and returns a connection
 func ValidateAccount() (errno int) {
 
-	credential, err := azblob.NewSharedKeyCredential(credentials.AccountName, credentials.AccountKey)
+	credential, err := azblob.NewSharedKeyCredential(AccountName, AccountKey)
 	if err != nil {
 		log.Printf("%v", err)
 		log.Printf("Error in NewShared KEy")
 		return 1
 	}
 	p := azblob.NewPipeline(credential, azblob.PipelineOptions{})
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", credentials.AccountName))
+	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net", AccountName))
 	serviceURL = azblob.NewServiceURL(*u, p)
 
 	// Try to list the blobs to verify the connection and account
 	ctx = context.Background()
-	containerURL = serviceURL.NewContainerURL(credentials.ContainerName)
+	containerURL = serviceURL.NewContainerURL(ContainerName)
 	marker := (azblob.Marker{})
 	_, err = containerURL.ListBlobsHierarchySegment(ctx, marker, "/", azblob.ListBlobsSegmentOptions{})
 	if err != nil {
@@ -45,7 +44,7 @@ func ValidateAccount() (errno int) {
 
 // GetBlobItems return list of blobs in the storage account
 func GetBlobItems(prefix string) (blobItems []azblob.BlobItem) {
-	log.Printf("Get Blob Items: %s", prefix)
+	// log.Printf("Get Blob Items: %s", prefix)
 	for marker := (azblob.Marker{}); marker.NotDone(); {
 		// Get a result segment starting with the blob indicated by the current Marker.
 		options := azblob.ListBlobsSegmentOptions{}
@@ -75,11 +74,10 @@ func GetBlobItems(prefix string) (blobItems []azblob.BlobItem) {
 
 // ReadBlobContents returns the byte array of the content of blob
 func ReadBlobContents(blobName string, blobsize uint64) []byte {
-	log.Printf("RedBlobContent: %s", blobName)
+	// log.Printf("RedBlobContent: %s", blobName)
 	blobURL := containerURL.NewBlobURL(blobName)
 	b := make([]byte, blobsize)
 	o := azblob.DownloadFromBlobOptions{
-		BlockSize:   int64(8 * 1024 * 1024), // 8MB
 		Parallelism: 5,
 	}
 	err := azblob.DownloadBlobToBuffer(ctx, blobURL, 0, 0, b, o)
@@ -91,7 +89,7 @@ func ReadBlobContents(blobName string, blobsize uint64) []byte {
 
 // UploadBlobContents returns status
 func UploadBlobContents(blobName string, data []byte, isDir bool) int {
-	log.Printf("UploadBlobContent: %s", blobName)
+	// log.Printf("UploadBlobContent: %s", blobName)
 	blobURL := containerURL.NewBlockBlobURL(blobName)
 	metadata := azblob.Metadata{}
 	if isDir {
