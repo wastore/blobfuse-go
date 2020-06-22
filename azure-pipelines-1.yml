@@ -55,7 +55,6 @@ steps:
     echo "Creating Cache dir " $(TEMP_DIR)
   displayName: "Create Cache Directory"
 
-
 # Set container name based on OS
 - script: |
     echo "::set-env name=CONT_NAME::$(containerName)"
