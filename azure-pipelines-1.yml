@@ -66,26 +66,26 @@ steps:
     STARTTIME=$(date +%s)
     dd if=/dev/zero of=$(MOUNT_DIR)/test1.txt  bs=10M  count=1
     ENDTIME=$(date +%s)
-    echo "$(($ENDTIME - $STARTTIME)) seconds to upload 10 MB"
+    echo '$(($ENDTIME - $STARTTIME)) seconds to upload 10 MB'
     STARTTIME=$(date +%s)
     dd if=/dev/zero of=$(MOUNT_DIR)/test2.txt  bs=100M  count=1
     ENDTIME=$(date +%s)
-    echo "$(($ENDTIME - $STARTTIME)) seconds to upload 100 MB"
+    echo '$(($ENDTIME - $STARTTIME)) seconds to upload 100 MB'
     STARTTIME=$(date +%s)
     dd if=/dev/zero of=$(MOUNT_DIR)/test3.txt  bs=200M  count=1
     ENDTIME=$(date +%s)
-    echo "$(($ENDTIME - $STARTTIME)) seconds to upload 200 MB"
+    echo '$(($ENDTIME - $STARTTIME)) seconds to upload 200 MB'
     STARTTIME=$(date +%s)
     dd if=/dev/zero of=$(MOUNT_DIR)/test4.txt  bs=400M  count=1
     ENDTIME=$(date +%s)
-    echo "$(($ENDTIME - $STARTTIME)) seconds to upload 400 MB"
+    echo '$(($ENDTIME - $STARTTIME)) seconds to upload 400 MB'
     STARTTIME=$(date +%s)
     dd if=/dev/zero of=$(MOUNT_DIR)/test5.txt  bs=1000M  count=1
     ENDTIME=$(date +%s)
-    echo "$(($ENDTIME - $STARTTIME)) seconds to upload 1000 MB"
+    echo '$(($ENDTIME - $STARTTIME)) seconds to upload 1000 MB'
     ls -l
   displayName: 'UploadTest - blobfuseGO'
-  
+
 # Unmount the blobfuse-go 
 - script: |
     fusermount -u $(MOUNT_DIR)
@@ -100,23 +100,23 @@ steps:
     STARTTIME=$(date +%s)
     cp $(MOUNT_DIR)/test1.txt ../anuj
     ENDTIME=$(date +%s)
-    echo "$(($ENDTIME - $STARTTIME)) seconds to download 10 MB"
+    echo '$(($ENDTIME - $STARTTIME)) seconds to download 10 MB'
     STARTTIME=$(date +%s)
     cp $(MOUNT_DIR)/test2.txt ../anuj
     ENDTIME=$(date +%s)
-    echo "$(($ENDTIME - $STARTTIME)) seconds to download 100 MB"
+    echo '$(($ENDTIME - $STARTTIME)) seconds to download 100 MB'
     STARTTIME=$(date +%s)
     cp $(MOUNT_DIR)/test3.txt ../anuj
     ENDTIME=$(date +%s)
-    echo "$(($ENDTIME - $STARTTIME)) seconds to download 200 MB"
+    echo '$(($ENDTIME - $STARTTIME)) seconds to download 200 MB'
     STARTTIME=$(date +%s)
     cp $(MOUNT_DIR)/test4.txt ../anuj
     ENDTIME=$(date +%s)
-    echo "$(($ENDTIME - $STARTTIME)) seconds to download 400 MB"
+    echo '$(($ENDTIME - $STARTTIME)) seconds to download 400 MB'
     STARTTIME=$(date +%s)
     cp $(MOUNT_DIR)/test5.txt ../anuj
     ENDTIME=$(date +%s)
-    echo "$(($ENDTIME - $STARTTIME)) seconds to download 1000 MB"
+    echo '$(($ENDTIME - $STARTTIME)) seconds to download 1000 MB'
     rm -rf ../anuj
   displayName: 'Download Test - blobfuseGO'
   
