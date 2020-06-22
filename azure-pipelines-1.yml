@@ -55,19 +55,11 @@ steps:
     chmod 777 $(TEMP_DIR)
   displayName: 'Create Cache Directory'
 
-# Create config file for the load
-- script: |
-    echo "accountName " $(NIGHTLY_STO_ACC_NAME) > $(BLOBFUSE_CFG)
-    echo "accountKey " $(NIGHTLY_STO_ACC_KEY) >> $(BLOBFUSE_CFG)
-    echo "authType Key" >> $(BLOBFUSE_CFG)
-    echo "containerName " $(containerName) >> $(BLOBFUSE_CFG)
-    cat $(BLOBFUSE_CFG)
-  displayName: 'Create config file'
 
 # Run the blobfuse-Go implementation
 - script: |
     ./filesystem --mountPath=$(MOUNT_DIR) --accountName=$(NIGHTLY_STO_ACC_NAME) --accountKey=$(NIGHTLY_STO_ACC_KEY) --containerName=$(containerName) &
-  displayName: "Mount blobfuseGO"
+  displayName: 'Mount blobfuseGO'
 
 # Run upload test using blobfuse-go
 - script: |
@@ -92,13 +84,13 @@ steps:
     ENDTIME=$(date +%s)
     echo "$(($ENDTIME - $STARTTIME)) seconds to upload 1000 MB"
     ls -l
-  displayName: "UploadTest - blobfuseGO"
-
+  displayName: 'UploadTest - blobfuseGO'
+  
 # Unmount the blobfuse-go 
 - script: |
     fusermount -u $(MOUNT_DIR)
     sudo rm -rf $(MOUNT_DIR)/*
-  displayName: "Ummount blobfuseGO"
+  displayName: 'Ummount blobfuseGO'
 
 # Run download test using blobfuse-go
 - script: |
@@ -126,10 +118,19 @@ steps:
     ENDTIME=$(date +%s)
     echo "$(($ENDTIME - $STARTTIME)) seconds to download 1000 MB"
     rm -rf ../anuj
-  displayName: "Download Test - blobfuseGO"
+  displayName: 'Download Test - blobfuseGO'
   
 # Unmount the blobfuse-go 
 - script: |
     fusermount -u $(MOUNT_DIR)
     sudo rm -rf $(MOUNT_DIR)/*
-  displayName: "Ummount blobfuseGO"
+  displayName: 'Ummount blobfuseGO'
+
+# Create the config file
+- script: |
+    echo "accountName " $(NIGHTLY_STO_ACC_NAME) > $(BLOBFUSE_CFG)
+    echo "accountKey " $(NIGHTLY_STO_ACC_KEY) >> $(BLOBFUSE_CFG)
+    echo "authType Key" >> $(BLOBFUSE_CFG)
+    echo "containerName " $(containerName) >> $(BLOBFUSE_CFG)
+    cat $(BLOBFUSE_CFG)
+  displayName: 'Create config file'
