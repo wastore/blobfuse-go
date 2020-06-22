@@ -21,6 +21,7 @@ variables:
 steps:
 # Install all required packages
 - script: |
+    sudo apt-get remove golang
     sudo apt-get update --fix-missing
     sudo apt-get install pkg-config cmake libcurl4-gnutls-dev libgnutls28-dev uuid-dev libgcrypt20-dev libboost-all-dev gcc g++ -y
     sudo apt-get install blobfuse
