@@ -39,6 +39,7 @@ steps:
 
 # Build  blobfuse-go 
 - script: |
+    cd main
     go build filesystem.go connection.go dirapis.go fileapis.go
   displayName: 'Build blobfuseGO'
 
