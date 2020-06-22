@@ -128,9 +128,11 @@ steps:
 
 # Create the config file
 - script: |
-    echo "accountName " $(NIGHTLY_STO_ACC_NAME) > $(BLOBFUSE_CFG)
-    echo "accountKey " $(NIGHTLY_STO_ACC_KEY) >> $(BLOBFUSE_CFG)
-    echo "authType Key" >> $(BLOBFUSE_CFG)
-    echo "containerName " $(containerName) >> $(BLOBFUSE_CFG)
+    echo 'accountName '' $(NIGHTLY_STO_ACC_NAME) > $(BLOBFUSE_CFG)
+    echo 'accountKey '' $(NIGHTLY_STO_ACC_KEY) >> $(BLOBFUSE_CFG)
+    echo 'authType Key' >> $(BLOBFUSE_CFG)
+    echo 'containerName '' $(containerName) >> $(BLOBFUSE_CFG)
     cat $(BLOBFUSE_CFG)
   displayName: 'Create config file'
+
+  
