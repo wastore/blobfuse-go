@@ -16,7 +16,7 @@ variables:
   - name: TEMP_DIR
     value: "/mnt/blobfusetmp"
   - name: BLOBFUSE_CFG
-    value: "/home/vsts/work/blobfuse.cfg
+    value: "/home/vsts/work/blobfuse.cfg"
 
 steps:
 # Install all required packages
@@ -135,4 +135,3 @@ steps:
     cat $(BLOBFUSE_CFG)
   displayName: 'Create config file'
 
-  
