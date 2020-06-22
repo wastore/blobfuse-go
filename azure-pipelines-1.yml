@@ -55,11 +55,6 @@ steps:
     chmod 777 $(TEMP_DIR)
   displayName: 'Create Cache Directory'
 
-# Set container name based on OS
-- script: |
-    echo "::set-env name=CONT_NAME::$(containerName)"
-  displayName: 'Prepare contianer name'
-
 # Create config file for the load
 - script: |
     echo "accountName " $(NIGHTLY_STO_ACC_NAME) > $(BLOBFUSE_CFG)
