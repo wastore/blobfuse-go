@@ -92,6 +92,11 @@ steps:
     sudo rm -rf $(MOUNT_DIR)/*
   displayName: 'Ummount blobfuseGO'
 
+# Run the blobfuse-Go implementation
+- script: |
+    ./filesystem --mountPath=$(MOUNT_DIR) --accountName=$(NIGHTLY_STO_ACC_NAME) --accountKey=$(NIGHTLY_STO_ACC_KEY) --containerName=$(containerName) &
+  displayName: 'Mount blobfuseGO'
+
 # Run download test using blobfuse-go
 - script: |
     mkdir ../anuj
