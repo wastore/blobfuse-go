@@ -23,7 +23,7 @@ type File struct {
 
 // Attr implements Node interface for files
 func (f *File) Attr(ctx context.Context, o *fuse.Attr) error {
-	log.Printf("File.Attr with caller: %s", f.path)
+	// log.Printf("File.Attr with caller: %s", f.path)
 	f.RLock()
 	*o = f.attr
 	f.RUnlock()
@@ -82,7 +82,7 @@ func (f *File) Flush(ctx context.Context, req *fuse.FlushRequest) error {
 
 // Setattr implements NodeSetattrer interface for files
 func (f *File) Setattr(ctx context.Context, req *fuse.SetattrRequest, resp *fuse.SetattrResponse) error {
-	log.Printf("Setattr with caller: %s", f.path)
+	// log.Printf("Setattr with caller: %s", f.path)
 	f.Lock()
 
 	if req.Valid.Size() {
