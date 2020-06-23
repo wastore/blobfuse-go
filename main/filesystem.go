@@ -111,7 +111,7 @@ var _ fs.HandleFlusher = (*File)(nil)
 
 // NewFS Returns a file system object for making a connection with
 func NewFS() *FS {
-	log.Printf("NewFS")
+// 	log.Printf("NewFS")
 	fs := &FS{
 		nodeCount: 1,
 	}
@@ -182,7 +182,7 @@ func (m *FS) Root() (fs.Node, error) {
 
 // Statfs is called to obtain file system metadata.
 func (m *FS) Statfs(ctx context.Context, req *fuse.StatfsRequest, resp *fuse.StatfsResponse) error {
-	log.Printf("Statfs() with caller: %s", m.root.path)
+// 	log.Printf("Statfs() with caller: %s", m.root.path)
 	resp.Blocks = uint64((atomic.LoadInt64(&m.size) + 511) / 512)
 	resp.Bsize = 512
 	resp.Files = atomic.LoadUint64(&m.nodeCount)
