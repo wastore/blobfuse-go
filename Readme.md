@@ -19,13 +19,14 @@ go build filesystem.go dirapis.go fileapis.go connection.go
 This will create a executable named as filesystem
 
 <h3>Run The File System Driver</h3>
-To run executable along with following command line options
+To run executable along with following command line options:
 ./filesystem --mountPath=/home/user/mountDir --accountName=nameOfStorageAccount --accountKey=accessKeyOfAccount --containerName=nameOfContainerToMount
 
 This will start the file system application as a daemon. Now you can move inside the mounted directory to wrk with the azure stroage account container mounted.
 
 
-<h3>Limitations and Future Work<h3>
+<h3>Limitations and Future Work</h3>
+  
 Works for Ubuntu 18.04
 Works for HNS disabled account
 Authentication through Access Key only
